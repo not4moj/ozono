@@ -410,37 +410,31 @@ footer p.fine{margin:0;color:var(--muted);font-size:.8rem}
 .pdf-nav button:disabled{opacity:.35;cursor:default}
 .pdf-nav .pdf-page-info{font-size:.85rem;color:var(--muted);min-width:64px;text-align:center}
 .pdf-nav{position:relative}
+.pdf-next-wrap{position:relative;display:inline-flex}
 .pdf-tutorial-hint{
   position:absolute;
-  bottom:calc(100% + 10px);
-  right:14px;
-  display:flex;align-items:center;gap:6px;
+  bottom:calc(100% + 8px);
+  left:50%;
+  transform:translateX(-50%) translateY(4px);
+  display:flex;flex-direction:column;align-items:center;gap:2px;
   pointer-events:none;
   opacity:0;
-  transform:translateY(4px);
   transition:opacity .3s ease, transform .3s ease;
   z-index:5;
 }
-[dir="rtl"] .pdf-tutorial-hint{right:auto;left:14px}
-.pdf-tutorial-hint.show{opacity:1;transform:translateY(0)}
+.pdf-tutorial-hint.show{opacity:1;transform:translateX(-50%) translateY(0)}
 .pdf-tutorial-hint-text{
   background:#FF6B4A;color:#fff;font-size:.76rem;font-weight:700;
   white-space:nowrap;padding:6px 12px;border-radius:10px;
   box-shadow:0 6px 16px rgba(255,107,74,.45);
 }
 .pdf-tutorial-hint-arrow{
-  width:22px;height:18px;color:#FF6B4A;flex:none;
+  width:18px;height:26px;color:#FF6B4A;flex:none;
   animation:pdfTutorialNudge 1.3s ease-in-out infinite;
 }
-[dir="rtl"] .pdf-tutorial-hint-arrow{transform:scaleX(-1)}
 @keyframes pdfTutorialNudge{
-  0%,100%{transform:translateX(0)}
-  50%{transform:translateX(5px)}
-}
-[dir="rtl"] .pdf-tutorial-hint-arrow{animation:pdfTutorialNudgeRtl 1.3s ease-in-out infinite}
-@keyframes pdfTutorialNudgeRtl{
-  0%,100%{transform:scaleX(-1) translateX(0)}
-  50%{transform:scaleX(-1) translateX(5px)}
+  0%,100%{transform:translateY(0)}
+  50%{transform:translateY(5px)}
 }
 @media (prefers-reduced-motion: reduce){
   .pdf-tutorial-hint-arrow{animation:none}
@@ -465,6 +459,16 @@ body.pdf-modal-open{overflow:hidden}
   transition:opacity .25s ease, transform .25s ease;
 }
 .float-order-group.is-hidden{opacity:0;transform:translateX(-50%) translateY(14px) scale(.94);pointer-events:none}
+body.pdf-modal-open .float-order-group{
+  left:auto;
+  right:calc(14px + env(safe-area-inset-right,0px));
+  bottom:calc(14px + env(safe-area-inset-bottom,0px));
+  transform:scale(.62);
+  transform-origin:bottom right;
+}
+body.pdf-modal-open .float-order-group.is-hidden{
+  transform:scale(.62) translateY(14px);
+}
 .float-order{
   position:relative;
   display:inline-flex;align-items:center;gap:8px;
@@ -661,13 +665,15 @@ body.pdf-modal-open{overflow:hidden}
         <canvas id="pdfCanvas" style="display:none"></canvas>
       </div>
       <div class="pdf-nav">
-        <span class="pdf-tutorial-hint" id="pdfTutorialHint" aria-hidden="true">
-          <span class="pdf-tutorial-hint-text" data-t="pdfTutorialHint"></span>
-          <svg class="pdf-tutorial-hint-arrow" viewBox="0 0 30 20" fill="none"><path d="M2 10h24" stroke="currentColor" stroke-width="2.6" stroke-linecap="round"/><path d="M18 2l10 8-10 8" stroke="currentColor" stroke-width="2.6" stroke-linecap="round" stroke-linejoin="round"/></svg>
-        </span>
         <button type="button" id="pdfPrev" aria-label="Previous page">&#8592;</button>
         <span class="pdf-page-info" id="pdfPageInfo">1 / 1</span>
-        <button type="button" id="pdfNext" aria-label="Next page">&#8594;</button>
+        <span class="pdf-next-wrap">
+          <button type="button" id="pdfNext" aria-label="Next page">&#8594;</button>
+          <span class="pdf-tutorial-hint" id="pdfTutorialHint" aria-hidden="true">
+            <span class="pdf-tutorial-hint-text" data-t="pdfTutorialHint"></span>
+            <svg class="pdf-tutorial-hint-arrow" viewBox="0 0 20 30" fill="none"><path d="M10 2v24" stroke="currentColor" stroke-width="2.6" stroke-linecap="round"/><path d="M2 18l8 10 8-10" stroke="currentColor" stroke-width="2.6" stroke-linecap="round" stroke-linejoin="round"/></svg>
+          </span>
+        </span>
       </div>
     </div>
   </div>
@@ -1145,6 +1151,7 @@ if(pdfPrevBtn) pdfPrevBtn.addEventListener('click', function(){
   queueRenderPage(pdfPageNum-1);
 });
 if(pdfNextBtn) pdfNextBtn.addEventListener('click', function(){
+  hidePdfTutorialHint();
   if(!pdfDoc || pdfPageNum>=pdfPageCount) return;
   queueRenderPage(pdfPageNum+1);
 });
