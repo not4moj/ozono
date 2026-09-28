@@ -337,9 +337,10 @@ footer p.fine{margin:0;color:var(--muted);font-size:.8rem}
 .pdf-modal-close:hover{background:var(--line)}
 .pdf-modal-body{
   flex:1;overflow-y:auto;overflow-x:hidden;background:var(--mist);
-  display:flex;align-items:center;justify-content:center;
+  display:flex;align-items:flex-start;justify-content:center;
   padding:18px;position:relative;
   scroll-behavior:smooth;
+  overflow-anchor:none;
 }
 @media (prefers-reduced-motion: reduce){
   .pdf-modal-body{scroll-behavior:auto}
@@ -851,17 +852,15 @@ function updatePdfNav(){
   if(pdfNextBtn) pdfNextBtn.disabled = !pdfDoc || pdfPageNum>=pdfPageCount;
 }
 
-function renderPdfPageInto(canvas){
+function renderPdfPageInto(canvas, preloadedPage){
   if(!pdfDoc || !canvas || canvas.dataset.rendered === '1' || canvas.dataset.rendering === '1') return;
   canvas.dataset.rendering = '1';
   const num = parseInt(canvas.dataset.pageNum, 10);
-  pdfDoc.getPage(num).then(function(page){
-    const containerWidth = Math.max(200, (pdfViewerBody ? pdfViewerBody.clientWidth : 600) - 36);
-    const baseViewport = page.getViewport({scale:1});
-    const scale = Math.min(2.2, containerWidth / baseViewport.width);
+  const scale = parseFloat(canvas.dataset.scale) || 1;
+  const pagePromise = preloadedPage ? Promise.resolve(preloadedPage) : pdfDoc.getPage(num);
+  pagePromise.then(function(page){
     const viewport = page.getViewport({scale: scale});
-    canvas.width = viewport.width;
-    canvas.height = viewport.height;
+    // canvas is already sized (width/height set in buildPdfPages) so this paint never resizes the layout
     const ctx = canvas.getContext('2d');
     page.render({canvasContext: ctx, viewport: viewport}).promise.then(function(){
       canvas.dataset.rendering = '0';
@@ -886,31 +885,51 @@ function updateCurrentPageFromScroll(){
   updatePdfNav();
 }
 
-function buildPdfPages(){
+function buildPdfPages(loadToken){
   if(!pdfDoc || !pdfPagesEl) return;
-  pdfPagesEl.innerHTML = '';
-  const frag = document.createDocumentFragment();
-  for(let i=1;i<=pdfPageCount;i++){
-    const c = document.createElement('canvas');
-    c.dataset.pageNum = String(i);
-    frag.appendChild(c);
-  }
-  pdfPagesEl.appendChild(frag);
-  if(pdfLoading) pdfLoading.style.display = 'none';
-  pdfPageNum = 1;
-  updatePdfNav();
+  const containerWidth = Math.max(200, (pdfViewerBody ? pdfViewerBody.clientWidth : 600) - 36);
+  const pageNums = [];
+  for(let i=1;i<=pdfPageCount;i++) pageNums.push(i);
 
-  if(pdfObserver) pdfObserver.disconnect();
-  pdfObserver = new IntersectionObserver(function(entries){
-    entries.forEach(function(entry){
-      if(entry.isIntersecting) renderPdfPageInto(entry.target);
+  // Fetch every page's real dimensions FIRST, so each canvas can be created at its
+  // final on-screen size. This means nothing resizes later as pixels paint in,
+  // which is what was dragging the scroll position away from page 1.
+  Promise.all(pageNums.map(function(n){ return pdfDoc.getPage(n); })).then(function(pages){
+    if(loadToken !== pdfCurrentUrl) return;
+    pdfPagesEl.innerHTML = '';
+    const frag = document.createDocumentFragment();
+    pages.forEach(function(page, idx){
+      const num = idx + 1;
+      const baseViewport = page.getViewport({scale:1});
+      const scale = Math.min(2.2, containerWidth / baseViewport.width);
+      const viewport = page.getViewport({scale: scale});
+      const c = document.createElement('canvas');
+      c.dataset.pageNum = String(num);
+      c.dataset.scale = String(scale);
+      c.width = viewport.width;
+      c.height = viewport.height;
+      frag.appendChild(c);
     });
-  }, {root: pdfViewerBody, rootMargin: '600px 0px', threshold: 0.01});
-  pdfPagesEl.querySelectorAll('canvas').forEach(function(c){ pdfObserver.observe(c); });
+    pdfPagesEl.appendChild(frag);
+    if(pdfLoading) pdfLoading.style.display = 'none';
+    pdfPageNum = 1;
+    updatePdfNav();
+    if(pdfViewerBody) pdfViewerBody.scrollTop = 0;
 
-  const first = pdfPagesEl.querySelector('canvas[data-page-num="1"]');
-  if(first) renderPdfPageInto(first);
-  if(pdfViewerBody) pdfViewerBody.scrollTop = 0;
+    if(pdfObserver) pdfObserver.disconnect();
+    pdfObserver = new IntersectionObserver(function(entries){
+      entries.forEach(function(entry){
+        if(entry.isIntersecting) renderPdfPageInto(entry.target);
+      });
+    }, {root: pdfViewerBody, rootMargin: '600px 0px', threshold: 0.01});
+    pdfPagesEl.querySelectorAll('canvas').forEach(function(c){ pdfObserver.observe(c); });
+
+    const first = pdfPagesEl.querySelector('canvas[data-page-num="1"]');
+    if(first) renderPdfPageInto(first, pages[0]);
+    if(pdfViewerBody) pdfViewerBody.scrollTop = 0;
+  }).catch(function(){
+    if(pdfLoading) pdfLoading.textContent = 'Could not load the PDF.';
+  });
 }
 
 function loadPdfInto(url){
@@ -931,7 +950,7 @@ function loadPdfInto(url){
     if(pdfCurrentUrl !== url) return;
     pdfDoc = doc;
     pdfPageCount = doc.numPages;
-    buildPdfPages();
+    buildPdfPages(url);
   }).catch(function(){
     if(pdfLoading) pdfLoading.textContent = 'Could not load the PDF.';
   });
