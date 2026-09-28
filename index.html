@@ -203,6 +203,18 @@ header.top .row{
 .order{background:var(--deep);color:#EAF6F8;padding:clamp(56px,9vh,100px) 0}
 .order .grid{display:grid;grid-template-columns:1fr 1fr;gap:48px}
 @media (max-width:820px){.order .grid{grid-template-columns:1fr}}
+.order-modes{display:flex;gap:10px;flex-wrap:wrap;margin:0 0 20px;direction:ltr}
+[dir="rtl"] .order-modes{justify-content:flex-end}
+.order-mode-btn{
+  appearance:none;cursor:pointer;
+  padding:10px 20px;border-radius:999px;
+  border:1.5px solid rgba(255,255,255,.35);
+  background:rgba(255,255,255,.06);
+  color:#EAF6F8;font-size:.9rem;font-weight:600;
+  transition:background .18s ease, border-color .18s ease, color .18s ease;
+}
+.order-mode-btn:hover{background:rgba(255,255,255,.14);border-color:#fff}
+.order-mode-btn.active{background:var(--cyan);border-color:var(--cyan);color:#04222B}
 .order h2{font-size:clamp(1.5rem,3vw,2rem);font-weight:700;margin:0 0 14px}
 .order p.copy{color:#BFE0E7;line-height:1.6;max-width:42ch;margin:0 0 24px}
 .order .direct{display:flex;flex-direction:column;gap:10px;margin-top:26px}
@@ -219,6 +231,14 @@ form{background:var(--paper);border-radius:6px;padding:clamp(24px,4vw,36px);colo
   font-size:.98rem;background:var(--paper);color:var(--ink);
 }
 .field input:focus,.field select:focus{outline:2px solid var(--cyan);outline-offset:1px;border-color:var(--cyan)}
+.field-check{margin-bottom:20px}
+.check-label{
+  display:flex;align-items:flex-start;gap:10px;cursor:pointer;
+  font-size:.88rem;line-height:1.4;color:var(--ink);
+}
+.check-label input[type="checkbox"]{
+  flex:none;width:19px;height:19px;margin-top:1px;accent-color:var(--cyan);cursor:pointer;
+}
 form .btn-primary{width:100%;justify-content:center;margin-top:6px}
 .confirm{display:none;text-align:center;padding:20px 6px}
 .confirm.show{display:block}
@@ -336,30 +356,20 @@ footer p.fine{margin:0;color:var(--muted);font-size:.8rem}
 }
 .pdf-modal-close:hover{background:var(--line)}
 .pdf-modal-body{
-  flex:1;overflow-y:auto;overflow-x:hidden;background:var(--mist);
-  display:flex;align-items:flex-start;justify-content:center;
+  flex:1;overflow:auto;background:var(--mist);
+  display:flex;align-items:center;justify-content:center;
   padding:18px;position:relative;
-  scroll-behavior:smooth;
-  overflow-anchor:none;
 }
-@media (prefers-reduced-motion: reduce){
-  .pdf-modal-body{scroll-behavior:auto}
-}
-.pdf-pages{
-  display:flex;flex-direction:column;align-items:center;gap:14px;
-  width:100%;
-}
-.pdf-pages canvas{
+.pdf-modal-body canvas{
   background:#fff;
   max-width:100%;height:auto;
   border-radius:3px;
   opacity:0;
-  transform:translateY(6px);
-  transition:opacity .35s ease, transform .35s ease;
+  transition:opacity .3s ease;
 }
-.pdf-pages canvas.loaded{opacity:1;transform:translateY(0)}
+.pdf-modal-body canvas.loaded{opacity:1}
 @media (prefers-reduced-motion: reduce){
-  .pdf-pages canvas{transition:none}
+  .pdf-modal-body canvas{transition:none}
 }
 .pdf-loading{color:var(--muted);font-size:.92rem;font-weight:500;align-self:center}
 .pdf-nav{
@@ -383,30 +393,45 @@ body.pdf-modal-open{overflow:hidden}
   .pdf-modal, .pdf-modal-panel{transition:none}
 }
 
-.float-order{
+.float-order-group{
   position:fixed;
   bottom:calc(20px + env(safe-area-inset-bottom,0px));
   left:50%;
   transform:translateX(-50%);
   z-index:150;
-  display:inline-flex;align-items:center;gap:9px;
-  padding:15px 26px;border-radius:999px;
-  background:var(--cyan);color:#04222B;
-  font-weight:700;font-size:.98rem;text-decoration:none;
-  box-shadow:0 4px 20px rgba(14,165,196,.4);
-  animation:floatPulse 2.6s ease-in-out infinite;
+  display:inline-flex;align-items:center;gap:10px;
+  direction:ltr;
   transition:opacity .25s ease, transform .25s ease;
 }
-.float-order:hover{background:#12b7d8;transform:translateX(-50%) translateY(-2px)}
-.float-order.is-hidden{opacity:0;transform:translateX(-50%) translateY(14px) scale(.94);pointer-events:none}
-.float-order .cart-icon{width:20px;height:20px;flex:none}
+.float-order-group.is-hidden{opacity:0;transform:translateX(-50%) translateY(14px) scale(.94);pointer-events:none}
+.float-order{
+  display:inline-flex;align-items:center;gap:8px;
+  padding:14px 22px;border-radius:999px;
+  font-weight:700;font-size:.92rem;text-decoration:none;white-space:nowrap;
+  transition:background .18s ease, transform .18s ease, box-shadow .18s ease;
+}
+.float-order.mode-order{
+  background:var(--cyan);color:#04222B;
+  box-shadow:0 4px 20px rgba(14,165,196,.4);
+  animation:floatPulse 2.6s ease-in-out infinite;
+}
+.float-order.mode-order:hover{background:#12b7d8;transform:translateY(-2px)}
+.float-order.mode-trial{
+  background:var(--paper);color:var(--deep);
+  border:1.5px solid var(--cyan);
+  box-shadow:0 4px 16px rgba(10,76,106,.18);
+}
+:root[data-theme="dark"] .float-order.mode-trial{color:#8FDCEE}
+.float-order.mode-trial:hover{background:var(--mist);transform:translateY(-2px)}
+.float-order .cart-icon{width:18px;height:18px;flex:none}
 @keyframes floatPulse{
   0%,100%{box-shadow:0 0 0 0 rgba(14,165,196,.55), 0 4px 20px rgba(14,165,196,.4);}
   50%{box-shadow:0 0 0 13px rgba(14,165,196,0), 0 4px 20px rgba(14,165,196,.55);}
 }
-@media (prefers-reduced-motion: reduce){.float-order{animation:none}}
+@media (prefers-reduced-motion: reduce){.float-order.mode-order{animation:none}}
 @media (max-width:600px){
-  .float-order{padding:13px 21px;font-size:.9rem;bottom:calc(16px + env(safe-area-inset-bottom,0px))}
+  .float-order{padding:12px 16px;font-size:.82rem;}
+  .float-order-group{bottom:calc(16px + env(safe-area-inset-bottom,0px));gap:8px}
 }
 </style>
 </head>
@@ -477,8 +502,12 @@ body.pdf-modal-open{overflow:hidden}
   <section class="order" id="order">
     <div class="wrap grid">
       <div>
-        <h2 data-t="orderTitle"></h2>
-        <p class="copy" data-t="orderCopy"></p>
+        <div class="order-modes" id="orderModes">
+          <button type="button" class="order-mode-btn" data-mode="order" data-t="ctaOrder"></button>
+          <button type="button" class="order-mode-btn" data-mode="trial" data-t="ctaTryFree"></button>
+        </div>
+        <h2 id="orderTitleEl"></h2>
+        <p class="copy" id="orderCopyEl"></p>
         <div class="direct" id="direct"></div>
       </div>
       <div>
@@ -492,14 +521,11 @@ body.pdf-modal-open{overflow:hidden}
               <label data-t="lblPhone"></label>
               <input type="tel" name="phone" required>
             </div>
-            <div class="field">
-              <label data-t="lblQty"></label>
-              <select name="qty">
-                <option value="1">1</option>
-                <option value="2">2</option>
-                <option value="3">3</option>
-                <option value="4">4+</option>
-              </select>
+            <div class="field field-check" id="eligibilityField">
+              <label class="check-label">
+                <input type="checkbox" name="eligibility" required>
+                <span data-t="lblEligibility"></span>
+              </label>
             </div>
             <button type="submit" class="btn btn-primary" data-t="btnSend"></button>
           </div>
@@ -523,10 +549,16 @@ body.pdf-modal-open{overflow:hidden}
     </div>
   </footer>
 
-  <a href="#order" id="floatOrder" class="float-order" aria-label="Order">
-    <svg class="cart-icon" viewBox="0 0 24 24" fill="none" aria-hidden="true"><path d="M3 4h2l2.4 12.2a2 2 0 0 0 2 1.6h7.6a2 2 0 0 0 2-1.6L21 8H6" stroke="currentColor" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round"/><circle cx="10" cy="20" r="1.3" fill="currentColor"/><circle cx="17" cy="20" r="1.3" fill="currentColor"/></svg>
-    <span data-t="ctaOrder"></span>
-  </a>
+  <div id="floatOrderGroup" class="float-order-group">
+    <a href="#order" id="floatOrder" class="float-order mode-order" data-mode="order" aria-label="Order">
+      <svg class="cart-icon" viewBox="0 0 24 24" fill="none" aria-hidden="true"><path d="M3 4h2l2.4 12.2a2 2 0 0 0 2 1.6h7.6a2 2 0 0 0 2-1.6L21 8H6" stroke="currentColor" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round"/><circle cx="10" cy="20" r="1.3" fill="currentColor"/><circle cx="17" cy="20" r="1.3" fill="currentColor"/></svg>
+      <span data-t="ctaOrder"></span>
+    </a>
+    <a href="#order" id="floatTrial" class="float-order mode-trial" data-mode="trial" aria-label="Try it free">
+      <svg class="cart-icon" viewBox="0 0 24 24" fill="none" aria-hidden="true"><path d="M20 8H4a1 1 0 0 0-1 1v3a1 1 0 0 0 1 1h16a1 1 0 0 0 1-1V9a1 1 0 0 0-1-1Z" stroke="currentColor" stroke-width="1.5" stroke-linejoin="round"/><path d="M5 13v6a1 1 0 0 0 1 1h12a1 1 0 0 0 1-1v-6M12 8V4M12 8c-1.4 0-3.2-.7-3.2-2.4C8.8 4.2 9.8 3 11 3c1.5 0 1.6 2.3 1 3.5M12 8c1.4 0 3.2-.7 3.2-2.4C15.2 4.2 14.2 3 13 3c-1.5 0-1.6 2.3-1 3.5" stroke="currentColor" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round"/></svg>
+      <span data-t="ctaTryFree"></span>
+    </a>
+  </div>
 
   <div id="pdfModal" class="pdf-modal" aria-hidden="true">
     <div class="pdf-modal-backdrop" data-pdf-close></div>
@@ -540,7 +572,7 @@ body.pdf-modal-open{overflow:hidden}
       </div>
       <div class="pdf-modal-body" id="pdfViewerBody">
         <span class="pdf-loading" id="pdfLoading">Loading…</span>
-        <div class="pdf-pages" id="pdfPages"></div>
+        <canvas id="pdfCanvas" style="display:none"></canvas>
       </div>
       <div class="pdf-nav">
         <button type="button" id="pdfPrev" aria-label="Previous page">&#8592;</button>
@@ -569,6 +601,7 @@ const T = {
     heroTitle:"Clean water and a chemical-free home, powered by ozone.",
     heroLead:"EcoAdvance turns your everyday tap water into a powerful natural disinfectant — no detergents, no plastic bottles, no chemicals.",
     ctaOrder:"Order now",
+    ctaTryFree:"Try it free",
     ctaLearn:"How it works",
     ctaPdf:"Read the brochure (PDF)",
     pdfDownload:"Download PDF",
@@ -587,25 +620,30 @@ const T = {
     s2:"It magnetizes and injects ozone into the water as it flows.",
     s3t:"Clean, disinfect, drink",
     s3:"Use it for laundry, surfaces, produce and drinking water.",
-    orderTitle:"Request your EcoAdvance",
-    orderCopy:"Leave your details and our team will get back to you with pricing and availability — no commitment.",
+    orderTitleOrder:"Request your EcoAdvance",
+    orderCopyOrder:"Leave your details and our team will get back to you with pricing and availability — no commitment.",
+    orderTitleTrial:"Try EcoAdvance for free",
+    orderCopyTrial:"Leave your details and we'll send you more information and a time to try it in person — completely free, no commitment. Currently only available for residents of the Tanger-Tétouan region.",
     lblName:"Full name",
     lblPhone:"Phone number",
-    lblQty:"Quantity",
+    lblEligibility:"I live in the Tanger-Tétouan region",
     btnSend:"Send request",
     confirmTitle:"Request received",
-    confirmCopy:"Thank you — our team will contact you shortly.",
+    confirmCopy:"Thank you — our team will message you on WhatsApp shortly.",
     directNote:"Prefer to talk now?",
     footNote:"EcoAdvance — Ozone water treatment and ecological cleaning.",
     errRequired:"Please fill out this field.",
     errPhone:"Please enter a valid phone number.",
-    waMessage:"Hello! My name is {name} (phone: {phone}). I'd like to order {qty} EcoAdvance unit(s) — could you tell me about the price and availability?"
+    errEligibility:"This free trial is currently only available in the Tanger-Tétouan region.",
+    waMessageOrder:"Hello! My name is {name} (phone: {phone}). I'd like to order EcoAdvance — could you tell me about the price and availability?",
+    waMessageTrial:"Hello! My name is {name} (phone: {phone}). I live in the Tanger-Tétouan region and I'd like to try EcoAdvance for free — could you send me more information and a time to try it?"
   },
   fr:{
     gateTitle:"Choisissez votre langue",
     heroTitle:"Une eau propre et une maison sans produits chimiques, grâce à l'ozone.",
     heroLead:"EcoAdvance transforme l'eau de votre robinet en un puissant désinfectant naturel — sans détergents, sans bouteilles en plastique, sans produits chimiques.",
     ctaOrder:"Commander",
+    ctaTryFree:"Essayer gratuitement",
     ctaLearn:"Comment ça marche",
     ctaPdf:"Lire la brochure (PDF)",
     pdfDownload:"Télécharger le PDF",
@@ -624,25 +662,30 @@ const T = {
     s2:"Il magnétise et injecte de l'ozone dans l'eau qui s'écoule.",
     s3t:"Nettoyez, désinfectez, buvez",
     s3:"Pour le linge, les surfaces, les aliments et l'eau potable.",
-    orderTitle:"Demandez votre EcoAdvance",
-    orderCopy:"Laissez vos coordonnées, notre équipe vous recontacte avec le tarif et la disponibilité — sans engagement.",
+    orderTitleOrder:"Demandez votre EcoAdvance",
+    orderCopyOrder:"Laissez vos coordonnées, notre équipe vous recontacte avec le tarif et la disponibilité — sans engagement.",
+    orderTitleTrial:"Essayez EcoAdvance gratuitement",
+    orderCopyTrial:"Laissez vos coordonnées, nous vous enverrons plus d'informations et un créneau pour l'essayer en personne — entièrement gratuit, sans engagement. Disponible pour l'instant uniquement pour les résidents de la région Tanger-Tétouan.",
     lblName:"Nom complet",
     lblPhone:"Numéro de téléphone",
-    lblQty:"Quantité",
+    lblEligibility:"J'habite dans la région Tanger-Tétouan",
     btnSend:"Envoyer la demande",
     confirmTitle:"Demande reçue",
-    confirmCopy:"Merci — notre équipe vous contactera très vite.",
+    confirmCopy:"Merci — notre équipe vous contactera sur WhatsApp très vite.",
     directNote:"Vous préférez en parler tout de suite ?",
     footNote:"EcoAdvance — Traitement de l'eau par ozone et nettoyage écologique.",
     errRequired:"Veuillez remplir ce champ.",
     errPhone:"Veuillez saisir un numéro de téléphone valide.",
-    waMessage:"Bonjour ! Je m'appelle {name} (téléphone : {phone}). Je souhaite commander {qty} appareil(s) EcoAdvance — pouvez-vous m'indiquer le prix et la disponibilité ?"
+    errEligibility:"Cet essai gratuit est actuellement réservé à la région Tanger-Tétouan.",
+    waMessageOrder:"Bonjour ! Je m'appelle {name} (téléphone : {phone}). Je souhaite commander EcoAdvance — pouvez-vous m'indiquer le prix et la disponibilité ?",
+    waMessageTrial:"Bonjour ! Je m'appelle {name} (téléphone : {phone}). J'habite dans la région Tanger-Tétouan et je souhaiterais essayer EcoAdvance gratuitement — pouvez-vous m'envoyer plus d'informations et un créneau pour l'essayer ?"
   },
   ar:{
     gateTitle:"اختر لغتك",
     heroTitle:"ماء نظيف ومنزل خالٍ من المواد الكيميائية، بفضل الأوزون.",
     heroLead:"يحوّل EcoAdvance ماء الصنبور اليومي إلى مطهّر طبيعي قوي — بلا منظفات، بلا قوارير بلاستيكية، بلا مواد كيميائية.",
     ctaOrder:"اطلب الآن",
+    ctaTryFree:"جرّبه مجانًا",
     ctaLearn:"كيف يعمل",
     ctaPdf:"اقرأ الكتيّب (PDF)",
     pdfDownload:"تنزيل PDF",
@@ -661,25 +704,30 @@ const T = {
     s2:"يمغنط ويحقن الأوزون في الماء أثناء تدفقه.",
     s3t:"نظّف وعقّم واشرب",
     s3:"للغسيل والأسطح والأطعمة ومياه الشرب.",
-    orderTitle:"اطلب جهاز EcoAdvance الخاص بك",
-    orderCopy:"اترك بياناتك وسيتواصل معك فريقنا لتزويدك بالسعر والتوفر — دون أي التزام.",
+    orderTitleOrder:"اطلب جهاز EcoAdvance الخاص بك",
+    orderCopyOrder:"اترك بياناتك وسيتواصل معك فريقنا لتزويدك بالسعر والتوفر — دون أي التزام.",
+    orderTitleTrial:"جرّب EcoAdvance مجانًا",
+    orderCopyTrial:"اترك بياناتك وسنرسل لك مزيدًا من المعلومات وموعدًا لتجربته شخصيًا — مجانًا بالكامل ودون أي التزام. متوفر حاليًا فقط لسكان جهة طنجة-تطوان.",
     lblName:"الاسم الكامل",
     lblPhone:"رقم الهاتف",
-    lblQty:"الكمية",
+    lblEligibility:"أسكن في جهة طنجة-تطوان",
     btnSend:"إرسال الطلب",
     confirmTitle:"تم استلام طلبك",
-    confirmCopy:"شكرًا لك — سيتواصل معك فريقنا في أقرب وقت.",
+    confirmCopy:"شكرًا لك — سيتواصل معك فريقنا عبر واتساب في أقرب وقت.",
     directNote:"تفضّل التحدث الآن؟",
     footNote:"EcoAdvance — معالجة المياه بالأوزون والتنظيف الإيكولوجي.",
     errRequired:"يرجى تعبئة هذا الحقل.",
     errPhone:"يرجى إدخال رقم هاتف صحيح.",
-    waMessage:"مرحبًا! اسمي {name} (الهاتف: {phone}). أرغب في طلب {qty} من جهاز EcoAdvance — هل يمكنكم إخباري بالسعر والتوفر؟"
+    errEligibility:"هذه التجربة المجانية متاحة حاليًا فقط في جهة طنجة-تطوان.",
+    waMessageOrder:"مرحبًا! اسمي {name} (الهاتف: {phone}). أرغب في طلب جهاز EcoAdvance — هل يمكنكم إخباري بالسعر والتوفر؟",
+    waMessageTrial:"مرحبًا! اسمي {name} (الهاتف: {phone}). أسكن في جهة طنجة-تطوان وأرغب في تجربة EcoAdvance مجانًا — هل يمكنكم إرسال مزيد من المعلومات وموعد لتجربته؟"
   },
   es:{
     gateTitle:"Elige tu idioma",
     heroTitle:"Agua limpia y un hogar sin químicos, gracias al ozono.",
     heroLead:"EcoAdvance convierte el agua de tu grifo en un potente desinfectante natural: sin detergentes, sin botellas de plástico, sin productos químicos.",
     ctaOrder:"Pedir ahora",
+    ctaTryFree:"Pruébalo gratis",
     ctaLearn:"Cómo funciona",
     ctaPdf:"Leer el folleto (PDF)",
     pdfDownload:"Descargar PDF",
@@ -698,19 +746,23 @@ const T = {
     s2:"Magnetiza e inyecta ozono en el agua mientras fluye.",
     s3t:"Limpia, desinfecta, bebe",
     s3:"Para la ropa, superficies, alimentos y agua de consumo.",
-    orderTitle:"Solicita tu EcoAdvance",
-    orderCopy:"Déjanos tus datos y nuestro equipo te contactará con el precio y la disponibilidad, sin compromiso.",
+    orderTitleOrder:"Solicita tu EcoAdvance",
+    orderCopyOrder:"Déjanos tus datos y nuestro equipo te contactará con el precio y la disponibilidad, sin compromiso.",
+    orderTitleTrial:"Prueba EcoAdvance gratis",
+    orderCopyTrial:"Déjanos tus datos y te enviaremos más información y un horario para probarlo en persona — totalmente gratis, sin compromiso. Por ahora solo disponible para residentes de la región de Tánger-Tetuán.",
     lblName:"Nombre completo",
     lblPhone:"Número de teléfono",
-    lblQty:"Cantidad",
+    lblEligibility:"Vivo en la región de Tánger-Tetuán",
     btnSend:"Enviar solicitud",
     confirmTitle:"Solicitud recibida",
-    confirmCopy:"Gracias, nuestro equipo te contactará muy pronto.",
+    confirmCopy:"Gracias — nuestro equipo te escribirá por WhatsApp muy pronto.",
     directNote:"¿Prefieres hablar ahora mismo?",
     footNote:"EcoAdvance — Tratamiento de agua con ozono y limpieza ecológica.",
     errRequired:"Por favor, completa este campo.",
     errPhone:"Por favor, introduce un número de teléfono válido.",
-    waMessage:"¡Hola! Soy {name} (teléfono: {phone}). Quisiera pedir {qty} unidad(es) de EcoAdvance — ¿podrían indicarme el precio y la disponibilidad?"
+    errEligibility:"Esta prueba gratuita solo está disponible por ahora en la región de Tánger-Tetuán.",
+    waMessageOrder:"¡Hola! Soy {name} (teléfono: {phone}). Quisiera pedir EcoAdvance — ¿podrían indicarme el precio y la disponibilidad?",
+    waMessageTrial:"¡Hola! Soy {name} (teléfono: {phone}). Vivo en la región de Tánger-Tetuán y me gustaría probar EcoAdvance gratis — ¿podrían enviarme más información y un horario para probarlo?"
   }
 };
 
@@ -729,6 +781,7 @@ const ICONS = {
 };
 
 let current = null;
+let orderMode = 'order';
 
 function buildGate(){
   const box = document.getElementById('langs');
@@ -779,24 +832,56 @@ function setLang(code){
   form.classList.remove('sent');
   document.getElementById('confirm').classList.remove('show');
   updateFormValidationMessages(t);
+  applyOrderMode(orderMode);
+}
+
+function applyOrderMode(mode){
+  orderMode = mode;
+  const t = T[current] || T.en;
+  const modesBox = document.getElementById('orderModes');
+  if(modesBox){
+    modesBox.querySelectorAll('.order-mode-btn').forEach(function(b){
+      b.classList.toggle('active', b.dataset.mode === mode);
+    });
+  }
+  const titleEl = document.getElementById('orderTitleEl');
+  const copyEl = document.getElementById('orderCopyEl');
+  if(titleEl) titleEl.textContent = mode === 'trial' ? t.orderTitleTrial : t.orderTitleOrder;
+  if(copyEl) copyEl.textContent = mode === 'trial' ? t.orderCopyTrial : t.orderCopyOrder;
+  const eligField = document.getElementById('eligibilityField');
+  if(eligField){
+    const eligInput = eligField.querySelector('input');
+    if(mode === 'trial'){
+      eligField.style.display = '';
+      if(eligInput) eligInput.required = true;
+    } else {
+      eligField.style.display = 'none';
+      if(eligInput){ eligInput.required = false; eligInput.checked = false; eligInput.setCustomValidity(''); }
+    }
+  }
 }
 
 function updateFormValidationMessages(t){
   const form = document.getElementById('orderForm');
   if(!form) return;
-  form.querySelectorAll('input[required]').forEach(input=>{
+  form.querySelectorAll('input').forEach(input=>{
     input.dataset.errRequired = t.errRequired;
     input.dataset.errPhone = t.errPhone || t.errRequired;
+    input.dataset.errEligibility = t.errEligibility || t.errRequired;
   });
 }
 
 function wireCustomValidation(){
   const form = document.getElementById('orderForm');
   if(!form) return;
-  form.querySelectorAll('input[required]').forEach(input=>{
+  form.querySelectorAll('input').forEach(input=>{
     input.addEventListener('invalid', function(){
       if(input.validity.valueMissing){
-        input.setCustomValidity(input.dataset.errRequired || 'Please fill out this field.');
+        if(input.type === 'checkbox'){
+          input.setCustomValidity(input.dataset.errEligibility || input.dataset.errRequired || 'Please fill out this field.');
+        } else {
+          input.setCustomValidity(input.dataset.errRequired || 'Please fill out this field.');
+        }
       } else if(input.validity.typeMismatch || input.validity.patternMismatch){
         input.setCustomValidity(input.dataset.errPhone || input.dataset.errRequired || '');
       } else {
@@ -806,6 +891,9 @@ function wireCustomValidation(){
     input.addEventListener('input', function(){
       input.setCustomValidity('');
     });
+    input.addEventListener('change', function(){
+      input.setCustomValidity('');
+    });
   });
 }
 
@@ -813,10 +901,10 @@ function setupFloatObserver(){
   if(window.__floatObsInit) return;
   window.__floatObsInit = true;
   const orderSection = document.getElementById('order');
-  const floatBtn = document.getElementById('floatOrder');
-  if(!orderSection || !floatBtn || !('IntersectionObserver' in window)) return;
+  const floatGroup = document.getElementById('floatOrderGroup');
+  if(!orderSection || !floatGroup || !('IntersectionObserver' in window)) return;
   const io = new IntersectionObserver(([entry])=>{
-    floatBtn.classList.toggle('is-hidden', entry.isIntersecting);
+    floatGroup.classList.toggle('is-hidden', entry.isIntersecting);
   }, {threshold:0.3});
   io.observe(orderSection);
 }
@@ -832,7 +920,7 @@ function enter(code){
 
 const pdfModal = document.getElementById('pdfModal');
 const pdfViewerBody = document.getElementById('pdfViewerBody');
-const pdfPagesEl = document.getElementById('pdfPages');
+const pdfCanvas = document.getElementById('pdfCanvas');
 const pdfLoading = document.getElementById('pdfLoading');
 const pdfPageInfo = document.getElementById('pdfPageInfo');
 const pdfPrevBtn = document.getElementById('pdfPrev');
@@ -842,9 +930,9 @@ let pdfLastFocused = null;
 let pdfDoc = null;
 let pdfPageNum = 1;
 let pdfPageCount = 0;
+let pdfRendering = false;
+let pdfPendingPage = null;
 let pdfCurrentUrl = null;
-let pdfObserver = null;
-let pdfScrollTicking = false;
 
 function updatePdfNav(){
   if(pdfPageInfo) pdfPageInfo.textContent = pdfPageCount ? (pdfPageNum + ' / ' + pdfPageCount) : '';
@@ -852,84 +940,38 @@ function updatePdfNav(){
   if(pdfNextBtn) pdfNextBtn.disabled = !pdfDoc || pdfPageNum>=pdfPageCount;
 }
 
-function renderPdfPageInto(canvas, preloadedPage){
-  if(!pdfDoc || !canvas || canvas.dataset.rendered === '1' || canvas.dataset.rendering === '1') return;
-  canvas.dataset.rendering = '1';
-  const num = parseInt(canvas.dataset.pageNum, 10);
-  const scale = parseFloat(canvas.dataset.scale) || 1;
-  const pagePromise = preloadedPage ? Promise.resolve(preloadedPage) : pdfDoc.getPage(num);
-  pagePromise.then(function(page){
+function renderPdfPage(num){
+  if(!pdfDoc) return;
+  pdfRendering = true;
+  pdfDoc.getPage(num).then(function(page){
+    const containerWidth = Math.max(200, (pdfViewerBody ? pdfViewerBody.clientWidth : 600) - 36);
+    const baseViewport = page.getViewport({scale:1});
+    const scale = Math.min(2.2, containerWidth / baseViewport.width);
     const viewport = page.getViewport({scale: scale});
-    // canvas is already sized (width/height set in buildPdfPages) so this paint never resizes the layout
-    const ctx = canvas.getContext('2d');
-    page.render({canvasContext: ctx, viewport: viewport}).promise.then(function(){
-      canvas.dataset.rendering = '0';
-      canvas.dataset.rendered = '1';
-      requestAnimationFrame(function(){ canvas.classList.add('loaded'); });
+    pdfCanvas.classList.remove('loaded');
+    pdfCanvas.width = viewport.width;
+    pdfCanvas.height = viewport.height;
+    const ctx = pdfCanvas.getContext('2d');
+    const renderTask = page.render({canvasContext: ctx, viewport: viewport});
+    renderTask.promise.then(function(){
+      pdfRendering = false;
+      pdfCanvas.style.display = 'block';
+      if(pdfLoading) pdfLoading.style.display = 'none';
+      requestAnimationFrame(function(){ pdfCanvas.classList.add('loaded'); });
+      if(pdfViewerBody) pdfViewerBody.scrollTop = 0;
+      if(pdfPendingPage !== null){
+        const next = pdfPendingPage;
+        pdfPendingPage = null;
+        renderPdfPage(next);
+      }
     });
   });
-}
-
-function updateCurrentPageFromScroll(){
-  if(!pdfViewerBody || !pdfPagesEl) return;
-  const canvases = pdfPagesEl.querySelectorAll('canvas');
-  if(!canvases.length) return;
-  const bodyRect = pdfViewerBody.getBoundingClientRect();
-  let closest = 1, closestDist = Infinity;
-  canvases.forEach(function(c){
-    const r = c.getBoundingClientRect();
-    const dist = Math.abs(r.top - bodyRect.top);
-    if(dist < closestDist){ closestDist = dist; closest = parseInt(c.dataset.pageNum, 10); }
-  });
-  pdfPageNum = closest;
+  pdfPageNum = num;
   updatePdfNav();
 }
 
-function buildPdfPages(loadToken){
-  if(!pdfDoc || !pdfPagesEl) return;
-  const containerWidth = Math.max(200, (pdfViewerBody ? pdfViewerBody.clientWidth : 600) - 36);
-  const pageNums = [];
-  for(let i=1;i<=pdfPageCount;i++) pageNums.push(i);
-
-  // Fetch every page's real dimensions FIRST, so each canvas can be created at its
-  // final on-screen size. This means nothing resizes later as pixels paint in,
-  // which is what was dragging the scroll position away from page 1.
-  Promise.all(pageNums.map(function(n){ return pdfDoc.getPage(n); })).then(function(pages){
-    if(loadToken !== pdfCurrentUrl) return;
-    pdfPagesEl.innerHTML = '';
-    const frag = document.createDocumentFragment();
-    pages.forEach(function(page, idx){
-      const num = idx + 1;
-      const baseViewport = page.getViewport({scale:1});
-      const scale = Math.min(2.2, containerWidth / baseViewport.width);
-      const viewport = page.getViewport({scale: scale});
-      const c = document.createElement('canvas');
-      c.dataset.pageNum = String(num);
-      c.dataset.scale = String(scale);
-      c.width = viewport.width;
-      c.height = viewport.height;
-      frag.appendChild(c);
-    });
-    pdfPagesEl.appendChild(frag);
-    if(pdfLoading) pdfLoading.style.display = 'none';
-    pdfPageNum = 1;
-    updatePdfNav();
-    if(pdfViewerBody) pdfViewerBody.scrollTop = 0;
-
-    if(pdfObserver) pdfObserver.disconnect();
-    pdfObserver = new IntersectionObserver(function(entries){
-      entries.forEach(function(entry){
-        if(entry.isIntersecting) renderPdfPageInto(entry.target);
-      });
-    }, {root: pdfViewerBody, rootMargin: '600px 0px', threshold: 0.01});
-    pdfPagesEl.querySelectorAll('canvas').forEach(function(c){ pdfObserver.observe(c); });
-
-    const first = pdfPagesEl.querySelector('canvas[data-page-num="1"]');
-    if(first) renderPdfPageInto(first, pages[0]);
-    if(pdfViewerBody) pdfViewerBody.scrollTop = 0;
-  }).catch(function(){
-    if(pdfLoading) pdfLoading.textContent = 'Could not load the PDF.';
-  });
+function queueRenderPage(num){
+  if(pdfRendering){ pdfPendingPage = num; } else { renderPdfPage(num); }
 }
 
 function loadPdfInto(url){
@@ -937,8 +979,7 @@ function loadPdfInto(url){
   pdfDoc = null;
   pdfPageCount = 0;
   pdfPageNum = 1;
-  if(pdfObserver){ pdfObserver.disconnect(); pdfObserver = null; }
-  if(pdfPagesEl) pdfPagesEl.innerHTML = '';
+  if(pdfCanvas){ pdfCanvas.style.display = 'none'; pdfCanvas.classList.remove('loaded'); }
   if(pdfLoading){ pdfLoading.style.display = 'block'; pdfLoading.textContent = 'Loading…'; }
   updatePdfNav();
   if(pdfDownloadLink) pdfDownloadLink.href = url;
@@ -950,7 +991,7 @@ function loadPdfInto(url){
     if(pdfCurrentUrl !== url) return;
     pdfDoc = doc;
     pdfPageCount = doc.numPages;
-    buildPdfPages(url);
+    renderPdfPage(1);
   }).catch(function(){
     if(pdfLoading) pdfLoading.textContent = 'Could not load the PDF.';
   });
@@ -974,29 +1015,16 @@ function closePdfModal(){
   document.body.classList.remove('pdf-modal-open');
   pdfCurrentUrl = null;
   pdfDoc = null;
-  if(pdfObserver){ pdfObserver.disconnect(); pdfObserver = null; }
   if(pdfLastFocused && pdfLastFocused.focus) pdfLastFocused.focus();
-}
-
-function goToPdfPage(num){
-  if(!pdfPagesEl) return;
-  const target = pdfPagesEl.querySelector('canvas[data-page-num="'+num+'"]');
-  if(target) target.scrollIntoView({behavior:'smooth', block:'start'});
 }
 
 if(pdfPrevBtn) pdfPrevBtn.addEventListener('click', function(){
   if(!pdfDoc || pdfPageNum<=1) return;
-  goToPdfPage(pdfPageNum-1);
+  queueRenderPage(pdfPageNum-1);
 });
 if(pdfNextBtn) pdfNextBtn.addEventListener('click', function(){
   if(!pdfDoc || pdfPageNum>=pdfPageCount) return;
-  goToPdfPage(pdfPageNum+1);
-});
-if(pdfViewerBody) pdfViewerBody.addEventListener('scroll', function(){
-  if(!pdfScrollTicking){
-    pdfScrollTicking = true;
-    requestAnimationFrame(function(){ updateCurrentPageFromScroll(); pdfScrollTicking = false; });
-  }
+  queueRenderPage(pdfPageNum+1);
 });
 
 document.getElementById('pdfLink').addEventListener('click', function(e){
@@ -1011,8 +1039,17 @@ if(pdfModal){
   });
 }
 
-document.getElementById('floatOrder').addEventListener('click', function(){
-  closePdfModal();
+document.querySelectorAll('#floatOrderGroup .float-order').forEach(function(btn){
+  btn.addEventListener('click', function(){
+    closePdfModal();
+    applyOrderMode(btn.dataset.mode);
+  });
+});
+
+document.querySelectorAll('#orderModes .order-mode-btn').forEach(function(btn){
+  btn.addEventListener('click', function(){
+    applyOrderMode(btn.dataset.mode);
+  });
 });
 
 document.getElementById('gate-h1').textContent = "Choose your language  ·  Choisissez votre langue  ·  اختر لغتك  ·  Elige tu idioma";
@@ -1029,12 +1066,12 @@ document.getElementById('orderForm').addEventListener('submit', function(e){
   const t = T[current] || T.en;
   const name = (this.querySelector('[name="name"]').value || '').trim();
   const phone = (this.querySelector('[name="phone"]').value || '').trim();
-  const qty = this.querySelector('[name="qty"]').value || '1';
-  const template = t.waMessage || T.en.waMessage;
+  const template = orderMode === 'trial'
+    ? (t.waMessageTrial || T.en.waMessageTrial)
+    : (t.waMessageOrder || T.en.waMessageOrder);
   const message = template
     .replace('{name}', name)
-    .replace('{phone}', phone)
-    .replace('{qty}', qty);
+    .replace('{phone}', phone);
   const waBase = CONTACT.whatsapp.replace(/\/$/, '');
   const waUrl = waBase + '?text=' + encodeURIComponent(message);
 
