@@ -336,15 +336,31 @@ footer p.fine{margin:0;color:var(--muted);font-size:.8rem}
 }
 .pdf-modal-close:hover{background:var(--line)}
 .pdf-modal-body{
-  flex:1;overflow:auto;background:#4b5257;
-  display:flex;align-items:flex-start;justify-content:center;
+  flex:1;overflow-y:auto;overflow-x:hidden;background:var(--mist);
+  display:flex;align-items:center;justify-content:center;
   padding:18px;position:relative;
+  scroll-behavior:smooth;
 }
-.pdf-modal-body canvas{
-  background:#fff;box-shadow:0 6px 20px rgba(0,0,0,.35);
+@media (prefers-reduced-motion: reduce){
+  .pdf-modal-body{scroll-behavior:auto}
+}
+.pdf-pages{
+  display:flex;flex-direction:column;align-items:center;gap:14px;
+  width:100%;
+}
+.pdf-pages canvas{
+  background:#fff;
   max-width:100%;height:auto;
+  border-radius:3px;
+  opacity:0;
+  transform:translateY(6px);
+  transition:opacity .35s ease, transform .35s ease;
 }
-.pdf-loading{color:#EAF6F8;font-size:.92rem;font-weight:500;align-self:center}
+.pdf-pages canvas.loaded{opacity:1;transform:translateY(0)}
+@media (prefers-reduced-motion: reduce){
+  .pdf-pages canvas{transition:none}
+}
+.pdf-loading{color:var(--muted);font-size:.92rem;font-weight:500;align-self:center}
 .pdf-nav{
   display:flex;align-items:center;justify-content:center;gap:16px;
   padding:10px 14px;border-top:1px solid var(--line);
@@ -523,7 +539,7 @@ body.pdf-modal-open{overflow:hidden}
       </div>
       <div class="pdf-modal-body" id="pdfViewerBody">
         <span class="pdf-loading" id="pdfLoading">Loading…</span>
-        <canvas id="pdfCanvas" style="display:none"></canvas>
+        <div class="pdf-pages" id="pdfPages"></div>
       </div>
       <div class="pdf-nav">
         <button type="button" id="pdfPrev" aria-label="Previous page">&#8592;</button>
@@ -814,7 +830,8 @@ function enter(code){
 }
 
 const pdfModal = document.getElementById('pdfModal');
-const pdfCanvas = document.getElementById('pdfCanvas');
+const pdfViewerBody = document.getElementById('pdfViewerBody');
+const pdfPagesEl = document.getElementById('pdfPages');
 const pdfLoading = document.getElementById('pdfLoading');
 const pdfPageInfo = document.getElementById('pdfPageInfo');
 const pdfPrevBtn = document.getElementById('pdfPrev');
@@ -824,9 +841,9 @@ let pdfLastFocused = null;
 let pdfDoc = null;
 let pdfPageNum = 1;
 let pdfPageCount = 0;
-let pdfRendering = false;
-let pdfPendingPage = null;
 let pdfCurrentUrl = null;
+let pdfObserver = null;
+let pdfScrollTicking = false;
 
 function updatePdfNav(){
   if(pdfPageInfo) pdfPageInfo.textContent = pdfPageCount ? (pdfPageNum + ' / ' + pdfPageCount) : '';
@@ -834,37 +851,66 @@ function updatePdfNav(){
   if(pdfNextBtn) pdfNextBtn.disabled = !pdfDoc || pdfPageNum>=pdfPageCount;
 }
 
-function renderPdfPage(num){
-  if(!pdfDoc) return;
-  pdfRendering = true;
+function renderPdfPageInto(canvas){
+  if(!pdfDoc || !canvas || canvas.dataset.rendered === '1' || canvas.dataset.rendering === '1') return;
+  canvas.dataset.rendering = '1';
+  const num = parseInt(canvas.dataset.pageNum, 10);
   pdfDoc.getPage(num).then(function(page){
-    const body = document.getElementById('pdfViewerBody');
-    const containerWidth = Math.max(200, (body ? body.clientWidth : 600) - 36);
+    const containerWidth = Math.max(200, (pdfViewerBody ? pdfViewerBody.clientWidth : 600) - 36);
     const baseViewport = page.getViewport({scale:1});
     const scale = Math.min(2.2, containerWidth / baseViewport.width);
     const viewport = page.getViewport({scale: scale});
-    pdfCanvas.width = viewport.width;
-    pdfCanvas.height = viewport.height;
-    const ctx = pdfCanvas.getContext('2d');
-    const renderTask = page.render({canvasContext: ctx, viewport: viewport});
-    renderTask.promise.then(function(){
-      pdfRendering = false;
-      pdfCanvas.style.display = 'block';
-      if(pdfLoading) pdfLoading.style.display = 'none';
-      if(body) body.scrollTop = 0;
-      if(pdfPendingPage !== null){
-        const next = pdfPendingPage;
-        pdfPendingPage = null;
-        renderPdfPage(next);
-      }
+    canvas.width = viewport.width;
+    canvas.height = viewport.height;
+    const ctx = canvas.getContext('2d');
+    page.render({canvasContext: ctx, viewport: viewport}).promise.then(function(){
+      canvas.dataset.rendering = '0';
+      canvas.dataset.rendered = '1';
+      requestAnimationFrame(function(){ canvas.classList.add('loaded'); });
     });
   });
-  pdfPageNum = num;
+}
+
+function updateCurrentPageFromScroll(){
+  if(!pdfViewerBody || !pdfPagesEl) return;
+  const canvases = pdfPagesEl.querySelectorAll('canvas');
+  if(!canvases.length) return;
+  const bodyRect = pdfViewerBody.getBoundingClientRect();
+  let closest = 1, closestDist = Infinity;
+  canvases.forEach(function(c){
+    const r = c.getBoundingClientRect();
+    const dist = Math.abs(r.top - bodyRect.top);
+    if(dist < closestDist){ closestDist = dist; closest = parseInt(c.dataset.pageNum, 10); }
+  });
+  pdfPageNum = closest;
   updatePdfNav();
 }
 
-function queueRenderPage(num){
-  if(pdfRendering){ pdfPendingPage = num; } else { renderPdfPage(num); }
+function buildPdfPages(){
+  if(!pdfDoc || !pdfPagesEl) return;
+  pdfPagesEl.innerHTML = '';
+  const frag = document.createDocumentFragment();
+  for(let i=1;i<=pdfPageCount;i++){
+    const c = document.createElement('canvas');
+    c.dataset.pageNum = String(i);
+    frag.appendChild(c);
+  }
+  pdfPagesEl.appendChild(frag);
+  if(pdfLoading) pdfLoading.style.display = 'none';
+  pdfPageNum = 1;
+  updatePdfNav();
+
+  if(pdfObserver) pdfObserver.disconnect();
+  pdfObserver = new IntersectionObserver(function(entries){
+    entries.forEach(function(entry){
+      if(entry.isIntersecting) renderPdfPageInto(entry.target);
+    });
+  }, {root: pdfViewerBody, rootMargin: '600px 0px', threshold: 0.01});
+  pdfPagesEl.querySelectorAll('canvas').forEach(function(c){ pdfObserver.observe(c); });
+
+  const first = pdfPagesEl.querySelector('canvas[data-page-num="1"]');
+  if(first) renderPdfPageInto(first);
+  if(pdfViewerBody) pdfViewerBody.scrollTop = 0;
 }
 
 function loadPdfInto(url){
@@ -872,7 +918,8 @@ function loadPdfInto(url){
   pdfDoc = null;
   pdfPageCount = 0;
   pdfPageNum = 1;
-  if(pdfCanvas) pdfCanvas.style.display = 'none';
+  if(pdfObserver){ pdfObserver.disconnect(); pdfObserver = null; }
+  if(pdfPagesEl) pdfPagesEl.innerHTML = '';
   if(pdfLoading){ pdfLoading.style.display = 'block'; pdfLoading.textContent = 'Loading…'; }
   updatePdfNav();
   if(pdfDownloadLink) pdfDownloadLink.href = url;
@@ -884,7 +931,7 @@ function loadPdfInto(url){
     if(pdfCurrentUrl !== url) return;
     pdfDoc = doc;
     pdfPageCount = doc.numPages;
-    renderPdfPage(1);
+    buildPdfPages();
   }).catch(function(){
     if(pdfLoading) pdfLoading.textContent = 'Could not load the PDF.';
   });
@@ -908,16 +955,29 @@ function closePdfModal(){
   document.body.classList.remove('pdf-modal-open');
   pdfCurrentUrl = null;
   pdfDoc = null;
+  if(pdfObserver){ pdfObserver.disconnect(); pdfObserver = null; }
   if(pdfLastFocused && pdfLastFocused.focus) pdfLastFocused.focus();
+}
+
+function goToPdfPage(num){
+  if(!pdfPagesEl) return;
+  const target = pdfPagesEl.querySelector('canvas[data-page-num="'+num+'"]');
+  if(target) target.scrollIntoView({behavior:'smooth', block:'start'});
 }
 
 if(pdfPrevBtn) pdfPrevBtn.addEventListener('click', function(){
   if(!pdfDoc || pdfPageNum<=1) return;
-  queueRenderPage(pdfPageNum-1);
+  goToPdfPage(pdfPageNum-1);
 });
 if(pdfNextBtn) pdfNextBtn.addEventListener('click', function(){
   if(!pdfDoc || pdfPageNum>=pdfPageCount) return;
-  queueRenderPage(pdfPageNum+1);
+  goToPdfPage(pdfPageNum+1);
+});
+if(pdfViewerBody) pdfViewerBody.addEventListener('scroll', function(){
+  if(!pdfScrollTicking){
+    pdfScrollTicking = true;
+    requestAnimationFrame(function(){ updateCurrentPageFromScroll(); pdfScrollTicking = false; });
+  }
 });
 
 document.getElementById('pdfLink').addEventListener('click', function(e){
