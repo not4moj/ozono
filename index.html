@@ -397,17 +397,19 @@ footer p.fine{margin:0;color:var(--muted);font-size:.8rem}
 }
 .pdf-loading{color:var(--muted);font-size:.92rem;font-weight:500;align-self:center}
 .pdf-nav{
-  display:flex;align-items:center;justify-content:center;gap:16px;
-  padding:10px 14px;border-top:1px solid var(--line);
+  display:flex;align-items:center;justify-content:center;gap:20px;
+  padding:12px 14px;border-top:1px solid var(--line);
   background:var(--paper);flex:none;
 }
 .pdf-nav button{
-  appearance:none;border:1.5px solid var(--line);background:var(--paper);
-  color:var(--deep);width:34px;height:34px;border-radius:50%;
-  font-size:1rem;cursor:pointer;
+  appearance:none;border:none;background:var(--cyan);
+  color:#04222B;width:46px;height:46px;border-radius:50%;
+  font-size:1.3rem;font-weight:700;cursor:pointer;
+  box-shadow:0 4px 14px rgba(14,165,196,.45);
+  transition:background .15s ease, transform .15s ease, box-shadow .15s ease;
 }
-.pdf-nav button:hover:not(:disabled){border-color:var(--cyan)}
-.pdf-nav button:disabled{opacity:.35;cursor:default}
+.pdf-nav button:hover:not(:disabled){background:#12b7d8;transform:translateY(-1px)}
+.pdf-nav button:disabled{opacity:.3;cursor:default;background:var(--line);color:var(--muted);box-shadow:none}
 .pdf-nav .pdf-page-info{font-size:.85rem;color:var(--muted);min-width:64px;text-align:center}
 .pdf-nav{position:relative}
 .pdf-next-wrap{position:relative;display:inline-flex}
@@ -460,14 +462,9 @@ body.pdf-modal-open{overflow:hidden}
 }
 .float-order-group.is-hidden{opacity:0;transform:translateX(-50%) translateY(14px) scale(.94);pointer-events:none}
 body.pdf-modal-open .float-order-group{
-  left:auto;
-  right:calc(14px + env(safe-area-inset-right,0px));
-  bottom:calc(14px + env(safe-area-inset-bottom,0px));
-  transform:scale(.62);
-  transform-origin:bottom right;
-}
-body.pdf-modal-open .float-order-group.is-hidden{
-  transform:scale(.62) translateY(14px);
+  opacity:0;
+  pointer-events:none;
+  transform:translateX(-50%) scale(.5);
 }
 .float-order{
   position:relative;
